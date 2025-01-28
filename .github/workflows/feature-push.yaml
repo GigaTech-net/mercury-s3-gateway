@@ -125,13 +125,6 @@ jobs:
             printf "aws_secret_access_key=\"%s\"\n" "${{ secrets.NGINX_S3_SECRET_KEY }}" >> infrastructure/var.tfvars
           }
 
-      # TODO delete after testing
-      - name: DEBUG
-        run: |
-          echo "MERCURY_S3_BUCKET ::: ${{ secrets.MERCURY_S3_BUCKET }}"
-          echo ""
-          cat ./infrastructure/var.tfvars
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
