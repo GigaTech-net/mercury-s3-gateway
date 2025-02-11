@@ -1,3 +1,19 @@
 # This file is intentional left as blank.
 # Use this file to add additional configuration to the "server"
 # block with default.conf.template
+
+if ($uri_path ~* ^/emp/[^/]+/$) {
+  set $uri_path "/emp/";
+}
+
+if ($uri_path ~* ^/emp-dev/[^/]+/$) {
+  set $uri_path "/emp-dev/";
+}
+
+if ($uri_path ~* ^/bddash/[^/]+/$) {
+  set $uri_path "/bddash/";
+}
+
+if ($uri_path ~* ^/bddash-dev/[^/]+/$) {
+  set $uri_path "/bddash-dev/";
+}
