@@ -1,0 +1,16 @@
+name: mercury-s3-gateway
+id: ari:cloud:compass:c5f85481-25ba-4ff0-afac-a4bc0082db80:component/0938370a-36b8-4157-8b2d-4cd87e26cf36/6b049b8a-e714-4d8f-b486-76aef9463601
+description: Project Mercury S3 Gateway
+configVersion: 1
+typeId: SERVICE
+fields:
+  tier: 4
+links:
+  - name: null
+    type: REPOSITORY
+    url: https://github.com/GigaTech-net/mercury-s3-gateway
+relationships:
+  DEPENDS_ON: []
+labels:
+  - source:github
+customFields: null
