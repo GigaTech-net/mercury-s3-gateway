@@ -22,9 +22,9 @@ permissions:
   statuses: write
 
 env:
-  IMAGE_REPOSITORY: s3gw
-  ECS_SERVICE_NAME: s3gw-prod-ecs-svc-name
-  ECS_CLUSTER_NAME: mercury-prod-cluster-prod
+  IMAGE_REPOSITORY: mercury
+  ECS_SERVICE_NAME: mercury-prod-ecs-svc-name
+  ECS_CLUSTER_NAME: mercury-cluster-prod
 
 jobs:
   setup:

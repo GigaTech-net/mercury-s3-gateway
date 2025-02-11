@@ -29,8 +29,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  IMAGE_REPOSITORY: s3gw
-  ECS_SERVICE_NAME: s3gw-prod-ecs-svc-name
+  IMAGE_REPOSITORY: mercury
+  ECS_SERVICE_NAME: mercury-prod-ecs-svc-name
 
 jobs:
   setup:
