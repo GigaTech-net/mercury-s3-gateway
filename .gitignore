@@ -390,4 +390,11 @@ terraform.rc
 .tfplan
 # End of https://www.toptal.com/developers/gitignore/api/terraform
 
+.terragrunt-cache
+*lock.hcl
+
 venv
+.env.local
+infrastructure/live/global_vars.hcl
+scripts/*
+!scripts/.git
