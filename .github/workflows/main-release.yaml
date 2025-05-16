@@ -188,7 +188,7 @@ jobs:
           # shellcheck disable=SC2002
           {
             echo "================task-definition.json================"
-            cat ./infrastructure/ecs-task-def/ecs-task-def/var.tfvars
+            cat ./infrastructure/ecs-task-def/var.tfvars
             echo ""
             echo "================task-definition.json================"
             cat ./infrastructure/ecs-task-def/rendered/task-definition.json
