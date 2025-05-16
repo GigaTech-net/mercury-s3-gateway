@@ -73,7 +73,8 @@ inputs = {
     "/emp-dev/*",
     "/emp-dev",
     "/bddash-dev/*",
-    "/bddash-dev"
+    "/bddash-dev",
+    "/health",
   ]
 
   tags = {
