@@ -1,4 +1,10 @@
 version: 2
+registries:
+  github:
+    type: git
+    url: https://github.com
+    username: x-access-token
+    password: ${{ secrets.GT_DEPENDABOT_PAT }}
 updates:
   # Enable version updates for npm
   - package-ecosystem: "npm"
@@ -10,6 +16,8 @@ updates:
     target-branch: "development"
     open-pull-requests-limit: 10
     versioning-strategy: "lockfile-only"
+    registries:
+      - github
 
   # Enable version updates for Docker
   - package-ecosystem: "docker"
@@ -20,6 +28,8 @@ updates:
       interval: "weekly"
     target-branch: "development"
     open-pull-requests-limit: 10
+    registries:
+      - github
 
   # Enable version updates for github actions
   - package-ecosystem: "github-actions"
@@ -28,3 +38,6 @@ updates:
       interval: "weekly"
     target-branch: "development"
     open-pull-requests-limit: 10
+    registries:
+      - github
+  
