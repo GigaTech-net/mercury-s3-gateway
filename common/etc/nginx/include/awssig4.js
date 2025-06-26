@@ -56,8 +56,6 @@ function signatureV4(r, timestamp, region, service, uri, queryParams, host, cred
             'SignedHeaders=', _signedHeaders(r, credentials.sessionToken), ',Signature=', signature);
 
     utils.debug_log(r, 'AWS v4 Auth header: [' + authHeader + ']');
-    // FOR DEBUG
-    utils.debug_log(r, 'Using AWS credentials: accessKeyId=' + credentials.accessKeyId + ', sessionToken=' + (credentials.sessionToken ? 'present' : 'none'));
 
     return authHeader;
 }
@@ -85,9 +83,6 @@ function _buildCanonicalRequest(r,
         canonicalHeaders += 'x-amz-security-token:' + sessionToken + '\n'
     }
 
-    // FOR DEBUG
-    utils.debug_log(r, 'CanonicalRequest inputs: method=' + method + ', uri=' + uri + ', queryParams=' + queryParams + ', host=' + host + ', amzDatetime=' + amzDatetime + ', sessionToken=' + sessionToken);
-
     let canonicalRequest = method + '\n';
     canonicalRequest += uri + '\n';
     canonicalRequest += queryParams + '\n';
@@ -113,7 +108,6 @@ function _buildCanonicalRequest(r,
  */
 function _buildSignatureV4(
     r, amzDatetime, eightDigitDate, creds, region, service, canonicalRequest) {
-    // FOR DEBUG
     utils.debug_log(r, 'AWS v4 Auth Canonical Request: [' + canonicalRequest + ']');
 
     const canonicalRequestHash = mod_hmac.createHash('sha256')
@@ -126,8 +120,6 @@ function _buildSignatureV4(
         amzDatetime, eightDigitDate, region, service, canonicalRequestHash);
 
     utils.debug_log(r, 'AWS v4 Auth Signing String: [' + stringToSign + ']');
-    // FOR DEBUG
-    utils.debug_log(r, 'Signing key inputs: region=' + region + ', service=' + service + ', secretAccessKey[redacted]=' + creds.secretAccessKey.slice(0,4) + '...');
 
     let kSigningHash;
 
@@ -286,8 +278,6 @@ function awsHeaderPayloadHash(r) {
     const payloadHash = mod_hmac.createHash('sha256', 'utf8')
         .update(reqBody)
         .digest('hex');
-    // FOR DEBUG
-    utils.debug_log(r, 'Payload hash: ' + payloadHash + ', length=' + reqBody.length);
     return payloadHash;
 }
 
