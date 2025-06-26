@@ -94,16 +94,11 @@ function sessionToken(r) {
  */
 function readCredentials(r) {
     if ('AWS_ACCESS_KEY_ID' in process.env && 'AWS_SECRET_ACCESS_KEY' in process.env) {
-        // FOR DEBUG
-        utils.debug_log(r, 'Credentials loaded from process.env');
         let sessionToken = 'AWS_SESSION_TOKEN' in process.env ?
             process.env['AWS_SESSION_TOKEN'] : null;
         if (sessionToken !== null && sessionToken.length === 0) {
             sessionToken = null;
         }
-        // FOR DEBUG
-        const accessKeyId = process.env['AWS_ACCESS_KEY_ID'];
-        utils.debug_log(r, 'AccessKeyId starts with: ' + accessKeyId.slice(0, 6));
         return {
             accessKeyId: process.env['AWS_ACCESS_KEY_ID'],
             secretAccessKey: process.env['AWS_SECRET_ACCESS_KEY'],
@@ -112,12 +107,8 @@ function readCredentials(r) {
         };
     }
     if ("variables" in r && r.variables.cache_instance_credentials_enabled == 1) {
-        // FOR DEBUG
-        utils.debug_log(r, 'Credentials loaded from NGINX KeyVal store');
         return _readCredentialsFromKeyValStore(r);
     } else {
-        // FOR DEBUG
-        utils.debug_log(r, 'Credentials loaded from temp file');
         return _readCredentialsFromFile();
     }
 }
