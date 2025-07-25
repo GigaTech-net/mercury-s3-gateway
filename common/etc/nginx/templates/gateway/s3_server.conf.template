@@ -17,3 +17,11 @@ if ($uri_path ~* ^/bddash/[^/]+/$) {
 if ($uri_path ~* ^/bddash-dev/[^/]+/$) {
   set $uri_path "/bddash-dev/";
 }
+
+if ($uri_path ~* ^/grc/[^/]+/$) {
+  set $uri_path "/grc/";
+}
+
+if ($uri_path ~* ^/grc-dev/[^/]+/$) {
+  set $uri_path "/grc-dev/";
+}
