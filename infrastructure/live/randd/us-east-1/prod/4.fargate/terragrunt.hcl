@@ -1,7 +1,7 @@
 locals {
   # automatically load global variables
   global_vars = read_terragrunt_config(find_in_parent_folders("global_vars.hcl", "ignore"), {inputs = {}})
-  
+
   # Automatically load account-level variables
   account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl", "ignore"), {inputs = {}})
 
@@ -27,7 +27,7 @@ locals {
   createdby           = local.global_vars.locals.createdby
   createdbytag        = local.global_vars.locals.createdbytag
   costcentertag       = local.global_vars.locals.costcentertag
-  
+
   appname             = local.account_vars.locals.appname
   appnametag          = local.global_vars.locals.appnametag
   envnametag          = local.global_vars.locals.envnametag
@@ -74,6 +74,8 @@ inputs = {
     "/emp-dev",
     "/bddash-dev/*",
     "/bddash-dev",
+    "/grc-dev/*",
+    "/grc-dev",
     "/health",
   ]
 
