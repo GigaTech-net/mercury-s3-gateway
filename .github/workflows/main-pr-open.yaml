@@ -95,7 +95,7 @@ jobs:
 
   enable-auto-merge:
     name: Enable Auto Merge
-    needs: [setup]
+    needs: [setup, auto-approve]
     runs-on: ubuntu-latest
     steps:
       - name: set to auto merge if human review is not needed (not dependabot)
@@ -120,7 +120,7 @@ jobs:
 
   auto-approve:
     name: Auto approve PR
-    needs: [human-review, enable-auto-merge, lint, secret-scan, spellcheck]
+    needs: [human-review, lint, secret-scan, spellcheck]
     runs-on: ubuntu-latest
     if: needs.human-review.outputs.human_review_needed == 'false'
     steps:  
