@@ -81,57 +81,16 @@ jobs:
           github_token: ${{ env.GITHUB_TOKEN }}
           needs_review_label: ${{ env.NEEDS_REVIEW_LABEL }}
 
-  # auto-approve BEFORE enable-auto-merge. The reverse order leaves a PR
-  # armed-but-unapproved when the approval step fails.
-  auto-approve:
-    name: Auto approve PR
-    needs: [quality-checks]
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    if: |
-      needs.quality-checks.result == 'success' &&
-      needs.quality-checks.outputs.auto_approve_eligible == 'true'
-    steps:
-      - name: Setup GitHub token
-        uses: GigaTech-net/public-reusable-workflows/.github/actions/setup-token@v1
-        with:
-          app_id: ${{ secrets.KEYROTATION_APPID_GT_GH }}
-          private_key: ${{ secrets.KEYROTATION_PVTKEY_GT_GH }}
-
-      - name: Approve the PR
-        run: gh pr review --approve "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
-
-  enable-auto-merge:
-    name: Enable Auto Merge
-    needs: [quality-checks, auto-approve]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    if: |
-      needs.quality-checks.result == 'success' &&
-      needs.auto-approve.result == 'success' &&
-      needs.quality-checks.outputs.auto_approve_eligible == 'true'
-    steps:
-      - name: Setup GitHub token
-        uses: GigaTech-net/public-reusable-workflows/.github/actions/setup-token@v1
-        with:
-          app_id: ${{ secrets.KEYROTATION_APPID_GT_GH }}
-          private_key: ${{ secrets.KEYROTATION_PVTKEY_GT_GH }}
-
-      - name: Enable auto merge
-        run: gh pr merge --auto --merge "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          # The App token, not GT_DEVSECOPS_PAT. A PAT bypasses branch
-          # protection; the App cannot, because every ruleset has
-          # bypass_actors: [].
-          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
-
+  # There is deliberately NO `auto-approve` and NO `enable-auto-merge` job here.
+  # mercury-s3-gateway is a PUBLIC repository, so anyone can open a pull request
+  # against it. An automated approval is a real approval as far as the `master`
+  # ruleset is concerned, so a self-approving pipeline on a public repo would let
+  # an outside contributor's change satisfy the 1-approval requirement and merge
+  # to production without a human ever looking at it. The pr-gate step below
+  # still runs, but its verdict is advisory: it is reported by `report-gate` for
+  # a reviewer to read, never acted on. Every PR here requires a human approval.
+  #
+  # Do not "restore" these jobs when syncing from `development`.
   report-gate:
     name: Report gate decision
     needs: [quality-checks]
