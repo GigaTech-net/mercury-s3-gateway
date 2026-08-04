@@ -35,7 +35,7 @@ jobs:
   setup:
     name: Setup
     permissions: read-all
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-setup.yaml@main
+    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-setup.yaml@v1
 
   lint:
     name: Lint Code Base
@@ -43,7 +43,7 @@ jobs:
     permissions:
       contents: read
       statuses: write
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-super-linter.yaml@main
+    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-super-linter.yaml@v1
     with:
       ### For a DevOps-focused repository. Prevents some code-language linters from running
       ### temporarily set this to bypass ts lint
@@ -57,17 +57,17 @@ jobs:
     name: Secret Scan
     needs: [setup]
     permissions: read-all
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-secret-scan.yaml@main
+    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-secret-scan.yaml@v1
 
   spellcheck:
     name: Spellcheck codebase
     needs: [setup]
     permissions:
       contents: write
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-spellcheck.yaml@main
+    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-spellcheck.yaml@v1
 
   dependency-check:
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-dependency-check.yaml@main
+    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-dependency-check.yaml@v1
     needs: [setup]
     permissions: read-all
     with:
