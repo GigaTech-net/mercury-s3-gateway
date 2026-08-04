@@ -36,8 +36,31 @@ env:
 jobs:
   setup:
     name: Setup
+    runs-on: ubuntu-latest
     permissions: read-all
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-setup.yaml@main
+    # rw-setup.yaml published these six as WORKFLOW outputs. A composite action
+    # only yields STEP outputs, so they are re-declared here at job level --
+    # without this block every needs.setup.outputs.* reference silently
+    # resolves to the empty string.
+    outputs:
+      current-version: ${{ steps.setup.outputs.current-version }}
+      current-v-version: ${{ steps.setup.outputs.current-v-version }}
+      version: ${{ steps.setup.outputs.version }}
+      v-version: ${{ steps.setup.outputs.v-version }}
+      pre-release-label: ${{ steps.setup.outputs.pre-release-label }}
+      branch: ${{ steps.setup.outputs.branch }}
+    steps:
+      # The action does not check out; version detection reads git tags, so the
+      # full history has to be on disk first.
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup workflow environment
+        id: setup
+        uses: >-
+          GigaTech-net/public-reusable-workflows/.github/actions/setup-workflow@v1
 
   lint:
     name: Lint Code Base
@@ -45,38 +68,84 @@ jobs:
     permissions:
       contents: read
       statuses: write
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-super-linter.yaml@main
-    with:
-      ### For a DevOps-focused repository. Prevents some code-language linters from running
-      ### defaults to false
-      ### temporarily set this to bypass ts lint
-      devops-only: false
-      ### A regex to exclude files from linting
-      ### defaults to empty
-      filter-regex-exclude: "[docs|src|.github|examples|deployments|common|plus|test]/**"
-      forkedRepoLIntRestriction: true
-      
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # Full git history is needed to get a proper list of changed files
+          fetch-depth: 0
+
+      - name: Super linter
+        uses: GigaTech-net/public-reusable-workflows/.github/actions/super-linter@v1
+        with:
+          env_file_path: .github/super-linter-feature-push.env
+
+
   secret-scan:
     name: Secret Scan
     needs: [setup]
+    runs-on: ubuntu-latest
     permissions: read-all
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-secret-scan.yaml@main
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # No inputs: the action's defaults (path ./, base "", head
+      # github.ref_name, extra_args --debug --json --only-verified) are exactly
+      # the values rw-secret-scan.yaml hardcoded.
+      - name: Secret scan
+        uses: >-
+          GigaTech-net/public-reusable-workflows/.github/actions/secret-scan@v1
 
   spellcheck:
     name: Spellcheck codebase
     needs: [setup]
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-spellcheck.yaml@main
-    with:
-      filesToIgnore: 'package-lock.json,./.vscode,./.github'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # filesToIgnore keeps the same name on the composite action and the same
+      # value as before. github_token is a new REQUIRED input:
+      # rw-spellcheck.yaml read secrets.GITHUB_TOKEN directly, which a composite
+      # action cannot do, so the caller passes it. It is used only to push
+      # spelling corrections back to the branch -- hence contents: write.
+      - name: Spellcheck
+        uses: GigaTech-net/public-reusable-workflows/.github/actions/spellcheck@v1
+        with:
+          filesToIgnore: 'package-lock.json,./.vscode,./.github'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   dependency-check:
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-dependency-check.yaml@main
     needs: [setup]
+    runs-on: ubuntu-latest
     permissions: read-all
-    with:
-      retentionDays: 1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # retentionDays -> retention_days (the composite renamed its inputs to
+      # snake_case). artifact_name is deliberately NOT passed: its default is
+      # `vulnerability_rpt`, identical to the old workflow's default, and the
+      # action already appends -${{ github.sha }} itself, so passing it would
+      # double the SHA suffix. oss_index_* are new REQUIRED inputs that
+      # rw-dependency-check.yaml never took.
+      - name: Dependency check
+        uses: >-
+          GigaTech-net/public-reusable-workflows/.github/actions/dependency-check@v1
+        with:
+          retention_days: 1
+          oss_index_user: ${{ secrets.SONATYPE_OSS_INDEX_USER }}
+          oss_index_api_token: ${{ secrets.SONATYPE_OSS_INDEX_API_TOKEN }}
 
   # build:
   #   name: Build

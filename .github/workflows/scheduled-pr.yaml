@@ -13,8 +13,37 @@ permissions:
 jobs:
   create-pr:
     name: Create PR
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-create-pr.yaml@main
-    with:
-      base-branch: 'master'
-      head-branch: 'development'
-    secrets: inherit
+    runs-on: ubuntu-latest
+    steps:
+      # Mirrors the checkout rw-create-pr.yaml performed internally. The action
+      # runs `git fetch` / `git merge` locally to detect changes and conflicts,
+      # so the head branch and its full history must be on disk. This repo is
+      # public, so the unauthenticated fetch works with persist-credentials off.
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: 'development'
+          fetch-depth: 0
+          persist-credentials: false
+
+      # rw-create-pr.yaml called setup-token itself and passed the App token to
+      # gh. github-token is now a REQUIRED input, so the caller does both. The
+      # App token, not secrets.GITHUB_TOKEN: a PR opened by github-actions[bot]
+      # does not trigger the main-pr workflows that gate the merge.
+      - name: Setup GitHub token
+        uses: GigaTech-net/public-reusable-workflows/.github/actions/setup-token@v1
+        with:
+          app_id: ${{ secrets.KEYROTATION_APPID_GT_GH }}
+          private_key: ${{ secrets.KEYROTATION_PVTKEY_GT_GH }}
+
+      # base-branch and head-branch keep the same names and values the reusable
+      # workflow was given. `secrets: inherit` is gone: it is only valid on a
+      # job-level `uses:`, and the one secret that was actually consumed is
+      # passed explicitly above.
+      - name: Create PR
+        uses: >-
+          GigaTech-net/public-reusable-workflows/.github/actions/create-pr@v1
+        with:
+          base-branch: 'master'
+          head-branch: 'development'
+          github-token: ${{ env.GITHUB_TOKEN }}
