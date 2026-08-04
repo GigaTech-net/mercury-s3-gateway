@@ -1,0 +1,109 @@
+---
+name: Development PR open workflow
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    branches:
+      - development
+
+env:
+  NEEDS_REVIEW_LABEL: "needs-human-review"
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+
+# cancel any previously-started, yet still active runs of this workflow
+# on the same branch
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  quality-checks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      statuses: write
+    outputs:
+      current-version: ${{ steps.setup.outputs.current-version }}
+      version: ${{ steps.setup.outputs.version }}
+      v-version: ${{ steps.setup.outputs.v-version }}
+      branch: ${{ steps.setup.outputs.branch }}
+      NEEDS_REVIEW_LABEL: ${{ env.NEEDS_REVIEW_LABEL }}
+      auto_approve_eligible: ${{ steps.pr-gate.outputs.auto_approve_eligible }}
+      gate_reasons: ${{ steps.pr-gate.outputs.reasons }}
+    steps:
+      # This repository is PUBLIC, so a pull_request from a fork receives no
+      # secrets. setup-token therefore fails for external contributors and the
+      # gate returns not-eligible, which is the intended outcome: their PR still
+      # runs the checks but can never be auto-approved.
+      - name: Setup GitHub token
+        uses: GigaTech-net/public-reusable-workflows/.github/actions/setup-token@v1
+        with:
+          app_id: ${{ secrets.KEYROTATION_APPID_GT_GH }}
+          private_key: ${{ secrets.KEYROTATION_PVTKEY_GT_GH }}
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Validate PR title
+        uses: >-
+          GigaTech-net/public-reusable-workflows/.github/actions/validate-pr-title@v1
+      - name: Setup workflow environment
+        id: setup
+        uses: >-
+          GigaTech-net/public-reusable-workflows/.github/actions/setup-workflow@v1
+
+      - name: Secret scan
+        uses: >-
+          GigaTech-net/public-reusable-workflows/.github/actions/secret-scan@v1
+
+      - name: Spellcheck
+        uses: GigaTech-net/public-reusable-workflows/.github/actions/spellcheck@v1
+        with:
+          github_token: ${{ env.GITHUB_TOKEN }}
+
+      # Was a separate `lint` job calling rw-super-linter.yaml. Its two inputs
+      # now live in .github/super-linter.env, which this action loads.
+      - name: Super linter
+        uses: >-
+          GigaTech-net/public-reusable-workflows/.github/actions/super-linter@v1
+
+      # Replaces the `complexity` and `human-review` jobs. Those read a single
+      # label and approved on sight.
+      - name: PR gate
+        id: pr-gate
+        uses: GigaTech-net/public-reusable-workflows/.github/actions/pr-gate@v1
+        with:
+          github_token: ${{ env.GITHUB_TOKEN }}
+          needs_review_label: ${{ env.NEEDS_REVIEW_LABEL }}
+
+  # There is deliberately NO `auto-approve` and NO `enable-auto-merge` job here.
+  # mercury-s3-gateway is a PUBLIC repository, so anyone can open a pull request
+  # against it. An automated approval is a real approval as far as the
+  # `development` ruleset is concerned, so a self-approving pipeline on a public
+  # repo would let an outside contributor's change satisfy the 1-approval
+  # requirement and merge without a human ever looking at it. The pr-gate step
+  # below still runs, but its verdict is advisory: it is reported by
+  # `report-gate` for a reviewer to read, never acted on. Every PR here requires
+  # a human approval.
+  #
+  # Do not "restore" these jobs.
+  report-gate:
+    name: Report gate decision
+    needs: [quality-checks]
+    runs-on: ubuntu-latest
+    if: always() && needs.quality-checks.outputs.auto_approve_eligible != 'true'
+    steps:
+      - name: Human review required
+        env:
+          REASONS: ${{ needs.quality-checks.outputs.gate_reasons }}
+        run: |
+          echo "This PR is not eligible for automated approval or merge."
+          echo "Reasons: $REASONS"
