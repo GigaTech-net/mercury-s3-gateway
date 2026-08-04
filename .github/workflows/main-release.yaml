@@ -46,16 +46,18 @@ jobs:
     permissions:
       contents: read
       statuses: write
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-super-linter.yaml@v1
-    with:
-      ### For a DevOps-focused repository. Prevents some code-language linters from running
-      ### defaults to false
-      ### temporarily set this to bypass ts lint
-      devops-only: false
-      ### A regex to exclude files from linting
-      ### defaults to empty
-      filter-regex-exclude: "[src|.github]/**"
-      forkedRepoLIntRestriction: true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # Full git history is needed to get a proper list of changed files
+          fetch-depth: 0
+
+      - name: Super linter
+        uses: GigaTech-net/public-reusable-workflows/.github/actions/super-linter@v1
+        with:
+          env_file_path: .github/super-linter-push.env
 
   secret-scan:
     name: Secret Scan
