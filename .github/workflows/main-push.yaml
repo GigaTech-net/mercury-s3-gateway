@@ -30,7 +30,7 @@ jobs:
   setup:
     name: Setup
     permissions: read-all
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-setup.yaml@main
+    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-setup.yaml@v1
 
   lint:
     name: Lint Code Base
@@ -38,7 +38,7 @@ jobs:
     permissions:
       contents: read
       statuses: write
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-super-linter.yaml@main
+    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-super-linter.yaml@v1
     with:
       ### For a DevOps-focused repository. Prevents some code-language linters from running
       ### defaults to false
@@ -53,14 +53,14 @@ jobs:
     name: Secret Scan
     needs: [setup]
     permissions: read-all
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-secret-scan.yaml@main
+    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-secret-scan.yaml@v1
 
   spellcheck:
     name: Spellcheck codebase
     needs: [setup]
     permissions:
       contents: write
-    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-spellcheck.yaml@main
+    uses: GigaTech-net/public-reusable-workflows/.github/workflows/rw-spellcheck.yaml@v1
 
   tag:
     needs: [setup, lint, secret-scan, spellcheck]
@@ -75,9 +75,15 @@ jobs:
           # Full git history is needed to get a proper list of changed files within `super-linter`
           fetch-depth: 0
 
+      - name: Setup GitHub token
+        uses: GigaTech-net/public-reusable-workflows/.github/actions/setup-token@v1
+        with:
+          app_id: ${{ secrets.KEYROTATION_APPID_GT_GH }}
+          private_key: ${{ secrets.KEYROTATION_PVTKEY_GT_GH }}
+
       - name: Bump version and push tag
         uses: anothrNick/github-tag-action@1.70.0 # Don't use @main or @v1 unless you're happy to test the latest version
         env:
-          GITHUB_TOKEN: ${{ secrets.GT_DEVSECOPS_PAT }}
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
           WITH_V: true
           PRERELEASE: true
